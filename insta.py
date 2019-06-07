@@ -4,8 +4,9 @@ from datetime import datetime
 
 
 def getData(profile):
-    looter = ProfileLooter("reknihy")
-    # looter.login("apexshopcz", "Dhcepic11")
+    looter = ProfileLooter(profile)
+    looter.login("apexshopcz", "Dhcepic11")
+    looter.jobs = 1
     mediasIterator = looter.medias()
 
     scrapedMedia = np.array([[0, 0, 0]])
