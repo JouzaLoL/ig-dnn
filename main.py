@@ -30,20 +30,19 @@ tensorboardCallback = keras.callbacks.TensorBoard(log_dir='./graph/' + dataname 
 model = Sequential()
 
 # Input layer
-model.add(Dense(128, input_dim=1, kernel_initializer='normal', activation='relu'))
+model.add(Dense(8, input_dim=1, kernel_initializer='normal', activation='relu'))
 
 # Hidden layers
-model.add(Dense(256, kernel_initializer='normal', activation='relu'))
-model.add(Dense(256, kernel_initializer='normal', activation='relu'))
-model.add(Dense(256, kernel_initializer='normal', activation='relu'))
+model.add(Dense(16, kernel_initializer='normal', activation='tanh'))
+
 
 # Output layer
 model.add(Dense(1, kernel_initializer='normal'))
 
 model.compile(loss='mean_absolute_error',
-              optimizer=keras.optimizers.Adam())
+              optimizer=keras.optimizers.Adadelta())
 
-model.fit(x_train, y_train, batch_size=1, epochs=500,
+model.fit(x_train, y_train, batch_size=1, epochs=100,
           callbacks=[tensorboardCallback])
 
 predicted = model.predict(x_train).astype(int)

@@ -12,6 +12,7 @@ def getData(profile):
     scrapedMedia = np.array([[0, 0, 0]])
 
     for x in mediasIterator:
+        looter.get_post_info(x["shortcode"])
         time = datetime.utcfromtimestamp(x['taken_at_timestamp'])
         minutes_since_midnight = (
             time - time.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()/60
