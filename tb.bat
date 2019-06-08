@@ -1,0 +1,1 @@
+tensorboard --logdir graph --host 192.168.1.200
