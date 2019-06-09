@@ -9,22 +9,58 @@ import numpy as np
 import datetime as datetime
 import sys as sys
 from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pyplot
 
 # Verify GPU
 from keras import backend as K
 K.tensorflow_backend._get_available_gpus()
 
-# Data
+# Data 
 # input structure: [minutes since midnight, likes, comments]
 dataname = sys.argv[1] if len(sys.argv) > 1 != None else 'spacex.csv'
 data = np.genfromtxt(dataname, delimiter=',')
 
-x_train = data[1:, [0]]
-y_train = data[1:, [1]]
+# Raw training data
+pyplot.title("Raw training data")
+pyplot.plot(x_train, y_train, 'ro', label="train")
+pyplot.legend()
+pyplot.show()
+
+# Split data into 10-minute clusters
+# TODO: this only splits it into groups, not into minute clusters, need to do that
+
+indices = np.array(range(0,1440, 60))
+print(indices)
+
+# Calculate averages
+def Average(lst): 
+    return sum(lst) / len(lst)
+
+y_avgs = []
+for row in y_train:
+    y_avgs.append([Average(row)]) 
+y_train = np.array(y_avgs)
+
+x_avgs = []
+for row in x_train:
+    x_avgs.append([Average(row)]) 
+x_train = x_avgs
 
 # Normalize data
 scaler = MinMaxScaler()
 x_train = scaler.fit_transform(x_train)
+
+# Extract x and y from data
+x_train = data[1:, [0]]
+y_train = data[1:, [1]]
+
+# Fix bad data
+x_train[0::] = x_train[0::] * 100
+
+pyplot.title("Averages transformed")
+pyplot.plot(x_train, y_train, 'ro', label="train")
+pyplot.legend()
+pyplot.show()
 
 # Tensorboard
 tensorboardCallback = keras.callbacks.TensorBoard(log_dir='./graph/' + dataname + "_" + str(datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")), histogram_freq=0,
@@ -34,21 +70,34 @@ tensorboardCallback = keras.callbacks.TensorBoard(log_dir='./graph/' + dataname 
 model = Sequential()
 
 # Input layer
-model.add(Dense(256, input_dim=1, kernel_initializer='glorot_normal', activation='relu'))
+model.add(Dense(512, input_dim=1,
+                kernel_initializer='glorot_normal', activation='relu'))
 
 # Hidden layers
-model.add(Dense(256, kernel_initializer='glorot_normal', activation='relu'))
-model.add(Dense(256, kernel_initializer='glorot_normal', activation='relu'))
-model.add(Dense(256, kernel_initializer='glorot_normal', activation='relu'))
+model.add(Dense(512, activation='relu'))
+model.add(Dense(512, activation='relu'))
 
 # Output layer
 model.add(Dense(1, kernel_initializer='normal'))
 
-model.compile(loss='mean_absolute_error',
-              optimizer=keras.optimizers.Adam(lr=0.005))
+model.compile(loss='mean_squared_error',
+              optimizer=keras.optimizers.Adam(lr=0.05))
 
-model.fit(x_train, y_train, batch_size=32, epochs=1000, shuffle=True,
-          callbacks=[tensorboardCallback])
+history = model.fit(x_train, y_train, batch_size=32, epochs=4000, shuffle=True,
+                    callbacks=[tensorboardCallback])
+
+# plot loss during training
+pyplot.title('Mean Squared Error')
+pyplot.plot(history.history['loss'], label='train')
+pyplot.legend()
+pyplot.show()
 
 predicted = model.predict(x_train).astype(int)
-print(np.column_stack((y_train, predicted)))    
+
+pyplot.title("Predicted vs actual values")
+pyplot.plot(x_train, predicted, 'bo', label="pred")
+pyplot.plot(x_train, y_train, 'ro', label="train")
+pyplot.legend()
+pyplot.show()
+
+print(np.column_stack((y_train, predicted)))
