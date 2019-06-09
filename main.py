@@ -20,15 +20,24 @@ K.tensorflow_backend._get_available_gpus()
 dataname = sys.argv[1] if len(sys.argv) > 1 != None else 'spacex.csv'
 data = np.genfromtxt(dataname, delimiter=',')
 
-# Raw training data
+# Fix data to minutes
+data[:,0] = data[:,0] * 100
+
+# Sort data
+data = data[data[:,0].argsort()]
+
+# Plot Raw training data
+pyplot.subplot(211)
 pyplot.title("Raw training data")
-pyplot.plot(x_train, y_train, 'ro', label="train")
+pyplot.plot(data[:,0], data[:,1], 'bo', label="likes")
+pyplot.legend()
+pyplot.subplot(212)
+pyplot.plot(data[:,0], data[:,2], 'go', label="comments")
 pyplot.legend()
 pyplot.show()
 
 # Split data into 10-minute clusters
-# TODO: this only splits it into groups, not into minute clusters, need to do that
-
+# https://stackoverflow.com/questions/11767139/split-numpy-array-at-multiple-values
 indices = np.array(range(0,1440, 60))
 print(indices)
 
@@ -55,7 +64,7 @@ x_train = data[1:, [0]]
 y_train = data[1:, [1]]
 
 # Fix bad data
-x_train[0::] = x_train[0::] * 100
+
 
 pyplot.title("Averages transformed")
 pyplot.plot(x_train, y_train, 'ro', label="train")
