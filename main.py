@@ -46,32 +46,34 @@ print(indices)
 split_at = data[:, 0].searchsorted(indices)
 split_data = np.split(data, split_at)
 
-# Calculate averages
-def Average(lst): 
-    return sum(lst) / len(lst)
+data_avgs = []
+for group in split_data:
+    mean_values = np.mean(group, 0)
+    data_avgs.append(mean_values)
 
-y_avgs = []
-for row in y_train:
-    y_avgs.append([Average(row)]) 
-y_train = np.array(y_avgs)
+# Throw out nan values
+data_avgs = np.array(data_avgs)
+data_avgs = data_avgs[~np.isnan(data_avgs).any(axis=1)]
 
-x_avgs = []
-for row in x_train:
-    x_avgs.append([Average(row)]) 
-x_train = x_avgs
+# Plot grouped training data
+pyplot.subplot(211)
+pyplot.title("Grouped avg training data")
+pyplot.plot(data_avgs[:,0], data_avgs[:,1], 'bo', label="likes")
+pyplot.legend()
+pyplot.subplot(212)
+pyplot.plot(data_avgs[:,0], data_avgs[:,2], 'go', label="comments")
+pyplot.legend()
+pyplot.show()
+
+# Extract x and y from data
+x_train = data_avgs[1:, [0]]
+y_train = data_avgs[1:, [1]]
 
 # Normalize data
 scaler = MinMaxScaler()
 x_train = scaler.fit_transform(x_train)
 
-# Extract x and y from data
-x_train = data[1:, [0]]
-y_train = data[1:, [1]]
-
-# Fix bad data
-
-
-pyplot.title("Averages transformed")
+pyplot.title("Averages normalized")
 pyplot.plot(x_train, y_train, 'ro', label="train")
 pyplot.legend()
 pyplot.show()
@@ -84,20 +86,19 @@ tensorboardCallback = keras.callbacks.TensorBoard(log_dir='./graph/' + dataname 
 model = Sequential()
 
 # Input layer
-model.add(Dense(512, input_dim=1,
+model.add(Dense(8, input_dim=1,
                 kernel_initializer='glorot_normal', activation='relu'))
 
 # Hidden layers
-model.add(Dense(512, activation='relu'))
-model.add(Dense(512, activation='relu'))
+model.add(Dense(32, activation='relu'))
 
 # Output layer
 model.add(Dense(1, kernel_initializer='normal'))
 
 model.compile(loss='mean_squared_error',
-              optimizer=keras.optimizers.Adam(lr=0.05))
+              optimizer=keras.optimizers.Adam(lr=0.01))
 
-history = model.fit(x_train, y_train, batch_size=32, epochs=4000, shuffle=True,
+history = model.fit(x_train, y_train, batch_size=1, epochs=300, shuffle=True,
                     callbacks=[tensorboardCallback])
 
 # plot loss during training
