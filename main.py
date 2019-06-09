@@ -20,8 +20,10 @@ K.tensorflow_backend._get_available_gpus()
 dataname = sys.argv[1] if len(sys.argv) > 1 != None else 'spacex.csv'
 data = np.genfromtxt(dataname, delimiter=',')
 
-# Fix data to minutes
+# Fix data to minutes and discard first value
 data[:,0] = data[:,0] * 100
+data = data[1:]
+
 
 # Sort data
 data = data[data[:,0].argsort()]
@@ -40,6 +42,9 @@ pyplot.show()
 # https://stackoverflow.com/questions/11767139/split-numpy-array-at-multiple-values
 indices = np.array(range(0,1440, 60))
 print(indices)
+
+split_at = data[:, 0].searchsorted(indices)
+split_data = np.split(data, split_at)
 
 # Calculate averages
 def Average(lst): 
